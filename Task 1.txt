@@ -1,0 +1,55 @@
+Build a script that builds a loadbalanced IIS environment using Azure Resource manager templates. Use best practices & be ready with explaination. ( Use availablity set, load balancer )
+
+
+POwershell Script to create windows VM
+
+{
+  "apiVersion": "2018-06-05",
+  "type": "Microsoft.Compute/virtualMachines/extensions",
+  "name": "[concat(variables('vmNameSQL'), '/', 'dscExtension')]",
+  "location": "[variables('location')]",
+  "dependsOn": [
+    "[concat('Microsoft.Compute/virtualMachines/', variables('vmNameSQL'))]"
+  ],
+  "properties": {
+    "publisher": "Microsoft.Powershell",
+    "type": "DSC",
+    "typeHandlerVersion": "2.9",
+    "autoUpgradeMinorVersion": true,
+    "settings": {
+      "configuration": {
+        "url": "[variables('dscModulesUrl')]",
+        "script": "[concat(variables('dscFunction'),'.ps1')]",
+        "function": "[variables('dscFunction')]"
+      },
+      "configurationArguments": {
+        "nodeName": "[variables('vmNameSQL')]"
+      }
+    },
+    "protectedSettings": {
+      "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+    }
+  }
+}
+
+
+script to create bootstrapped IIS server
+
+Configuration WindowsFeatures
+{
+  param ([string[]]$NodeName = 'localhost')
+
+  Node $NodeName
+  {
+    #Install the IIS Role
+    WindowsFeature IIS
+    {
+      Ensure = “Present”
+      Name = “Web-Server”
+    }
+
+  }
+} 
+
+
+
